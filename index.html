@@ -74,6 +74,12 @@
     margin-top: 0.5rem;
     min-height: 1.2em;
   }
+  .hint {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.8rem;
+    margin: 0;
+  }
   #out { margin-top: 1rem; }
   #out h1, #out h2, #out h3, #out h4, #out h5, #out h6 {
     line-height: 1.25;
@@ -107,6 +113,24 @@
   #out table { border-collapse: collapse; width: 100%; }
   #out th, #out td { border: 1px solid var(--border); padding: 0.4em 0.7em; }
   #out hr { border: none; border-top: 1px solid var(--border); margin: 2em 0; }
+  #drop-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    pointer-events: none;
+  }
+  #drop-overlay.active { display: flex; }
+  #drop-overlay > div {
+    color: #fff;
+    font-size: 1.25rem;
+    padding: 2rem 3rem;
+    border: 2px dashed rgba(255, 255, 255, 0.7);
+    border-radius: 12px;
+  }
 </style>
 </head>
 <body>
@@ -116,22 +140,22 @@
   <div class="bar">
     <button id="btn" type="button">Pick .md file to render</button>
   </div>
+  <p class="hint">…or drag &amp; drop a file anywhere on the page</p>
   <div class="filename" id="filename"></div>
   <article id="out"></article>
 </main>
 <input type="file" id="file" accept=".md,.markdown,text/markdown,text/plain" hidden />
+<div id="drop-overlay"><div>Drop your .md file</div></div>
 <script>
   const btn = document.getElementById('btn');
   const file = document.getElementById('file');
   const out = document.getElementById('out');
   const fname = document.getElementById('filename');
+  const overlay = document.getElementById('drop-overlay');
 
   marked.setOptions({ gfm: true, breaks: false });
 
-  btn.addEventListener('click', () => file.click());
-
-  file.addEventListener('change', () => {
-    const f = file.files[0];
+  function renderFile(f) {
     if (!f) return;
     const reader = new FileReader();
     reader.onload = e => {
@@ -140,7 +164,35 @@
       fname.textContent = f.name;
     };
     reader.readAsText(f);
+  }
+
+  btn.addEventListener('click', () => file.click());
+
+  file.addEventListener('change', () => {
+    renderFile(file.files[0]);
     file.value = '';
+  });
+
+  let dragDepth = 0;
+  window.addEventListener('dragenter', e => {
+    e.preventDefault();
+    if (e.dataTransfer && Array.from(e.dataTransfer.types).includes('Files')) {
+      dragDepth++;
+      overlay.classList.add('active');
+    }
+  });
+  window.addEventListener('dragover', e => { e.preventDefault(); });
+  window.addEventListener('dragleave', e => {
+    e.preventDefault();
+    dragDepth = Math.max(0, dragDepth - 1);
+    if (dragDepth === 0) overlay.classList.remove('active');
+  });
+  window.addEventListener('drop', e => {
+    e.preventDefault();
+    dragDepth = 0;
+    overlay.classList.remove('active');
+    const f = e.dataTransfer && e.dataTransfer.files[0];
+    if (f) renderFile(f);
   });
 </script>
 </body>
