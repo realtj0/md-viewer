@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Minimalistic Markdown Viewer</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+<link rel="apple-touch-icon" href="favicon.svg" />
+<link rel="manifest" href="manifest.webmanifest" />
+<meta name="theme-color" content="#fafafa" media="(prefers-color-scheme: light)" />
+<meta name="theme-color" content="#111111" media="(prefers-color-scheme: dark)" />
+<meta name="description" content="Render markdown locally in your browser. No data leaves your device." />
 <script src="marked.min.js"></script>
 <script src="purify.min.js"></script>
 <style>
@@ -194,6 +199,14 @@
     const f = e.dataTransfer && e.dataTransfer.files[0];
     if (f) renderFile(f);
   });
+
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js').catch(err => {
+        console.warn('Service worker registration failed:', err);
+      });
+    });
+  }
 </script>
 </body>
 </html>

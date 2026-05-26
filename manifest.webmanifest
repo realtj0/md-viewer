@@ -1,0 +1,18 @@
+{
+  "name": "Minimalistic Markdown Viewer",
+  "short_name": "MD Viewer",
+  "description": "Render markdown locally in your browser. No data leaves your device.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#fafafa",
+  "theme_color": "#111111",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
