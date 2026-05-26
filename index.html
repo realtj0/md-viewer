@@ -85,6 +85,25 @@
     font-size: 0.8rem;
     margin: 0;
   }
+  body.rendered .title,
+  body.rendered .subtitle,
+  body.rendered .hint,
+  body.rendered .filename { display: none; }
+  body.rendered main { padding-top: 0; }
+  body.rendered .bar {
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    padding: 0.6rem 0;
+    margin: 0 -1.5rem;
+    z-index: 5;
+    border-bottom: 1px solid var(--border);
+  }
+  body.rendered #btn {
+    padding: 0.35rem 0.9rem;
+    font-size: 0.8rem;
+  }
+  body.rendered #out { margin-top: 1.5rem; }
   #out { margin-top: 1rem; }
   #out h1, #out h2, #out h3, #out h4, #out h5, #out h6 {
     line-height: 1.25;
@@ -167,6 +186,9 @@
       const html = marked.parse(e.target.result);
       out.innerHTML = DOMPurify.sanitize(html);
       fname.textContent = f.name;
+      document.body.classList.add('rendered');
+      btn.textContent = 'Pick new .md file';
+      window.scrollTo({ top: 0 });
     };
     reader.readAsText(f);
   }
