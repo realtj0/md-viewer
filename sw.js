@@ -1,4 +1,4 @@
-const CACHE = 'mdviewer-v2';
+const CACHE = 'mdviewer-v3';
 const ASSETS = [
   './',
   './index.html',
@@ -24,16 +24,39 @@ self.addEventListener('activate', event => {
   );
 });
 
+// Network-first for navigation/HTML so new deployments are picked up immediately.
+// Stale-while-revalidate for everything else.
 self.addEventListener('fetch', event => {
-  if (event.request.method !== 'GET') return;
+  const req = event.request;
+  if (req.method !== 'GET') return;
+
+  const isHTML =
+    req.mode === 'navigate' ||
+    (req.headers.get('accept') || '').includes('text/html');
+
+  if (isHTML) {
+    event.respondWith(
+      fetch(req)
+        .then(res => {
+          if (res && res.ok) {
+            const copy = res.clone();
+            caches.open(CACHE).then(c => c.put(req, copy));
+          }
+          return res;
+        })
+        .catch(() => caches.match(req).then(c => c || caches.match('./index.html')))
+    );
+    return;
+  }
+
   event.respondWith(
-    caches.match(event.request).then(cached => {
-      const fetchPromise = fetch(event.request).then(response => {
-        if (response && response.ok && response.type === 'basic') {
-          const copy = response.clone();
-          caches.open(CACHE).then(cache => cache.put(event.request, copy));
+    caches.match(req).then(cached => {
+      const fetchPromise = fetch(req).then(res => {
+        if (res && res.ok && res.type === 'basic') {
+          const copy = res.clone();
+          caches.open(CACHE).then(c => c.put(req, copy));
         }
-        return response;
+        return res;
       }).catch(() => cached);
       return cached || fetchPromise;
     })
