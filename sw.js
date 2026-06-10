@@ -1,11 +1,10 @@
-const CACHE = 'mdviewer-v5';
+const CACHE = 'mdviewer-v6';
 const ASSETS = [
   './',
   './index.html',
   './marked.min.js',
   './purify.min.js',
-  './favicon.svg',
-  './manifest.webmanifest'
+  './favicon.svg'
 ];
 
 self.addEventListener('install', event => {
@@ -29,6 +28,10 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   const req = event.request;
   if (req.method !== 'GET') return;
+
+  // Never intercept the manifest — Chrome must always see the freshest one
+  // so PWA metadata (name, icons, file_handlers) updates promptly.
+  if (new URL(req.url).pathname.endsWith('/manifest.webmanifest')) return;
 
   const isHTML =
     req.mode === 'navigate' ||
