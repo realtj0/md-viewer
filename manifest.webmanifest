@@ -14,5 +14,14 @@
       "type": "image/svg+xml",
       "purpose": "any maskable"
     }
+  ],
+  "file_handlers": [
+    {
+      "action": "/md-viewer/",
+      "accept": {
+        "text/markdown": [".md", ".markdown", ".mdown", ".mkd"],
+        "text/plain": [".txt"]
+      }
+    }
   ]
 }

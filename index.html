@@ -179,17 +179,20 @@
 
   marked.setOptions({ gfm: true, breaks: false });
 
+  function renderText(text, name) {
+    const html = marked.parse(text);
+    out.innerHTML = DOMPurify.sanitize(html);
+    fname.textContent = name;
+    document.title = name + ' — MMV';
+    document.body.classList.add('rendered');
+    btn.textContent = 'Pick new .md file';
+    window.scrollTo({ top: 0 });
+  }
+
   function renderFile(f) {
     if (!f) return;
     const reader = new FileReader();
-    reader.onload = e => {
-      const html = marked.parse(e.target.result);
-      out.innerHTML = DOMPurify.sanitize(html);
-      fname.textContent = f.name;
-      document.body.classList.add('rendered');
-      btn.textContent = 'Pick new .md file';
-      window.scrollTo({ top: 0 });
-    };
+    reader.onload = e => renderText(e.target.result, f.name);
     reader.readAsText(f);
   }
 
@@ -221,6 +224,34 @@
     const f = e.dataTransfer && e.dataTransfer.files[0];
     if (f) renderFile(f);
   });
+
+  if ('launchQueue' in window) {
+    window.launchQueue.setConsumer(async launchParams => {
+      if (!launchParams.files || !launchParams.files.length) return;
+      try {
+        const handle = launchParams.files[0];
+        const file = await handle.getFile();
+        const text = await file.text();
+        renderText(text, file.name);
+      } catch (err) {
+        console.warn('launchQueue file read failed:', err);
+      }
+    });
+  }
+
+  const srcParam = new URLSearchParams(window.location.search).get('src');
+  if (srcParam) {
+    fetch(srcParam)
+      .then(r => r.ok ? r.text() : Promise.reject(new Error('HTTP ' + r.status)))
+      .then(text => {
+        const name = (() => {
+          try { return new URL(srcParam, window.location.href).pathname.split('/').pop() || 'remote.md'; }
+          catch { return 'remote.md'; }
+        })();
+        renderText(text, name);
+      })
+      .catch(err => console.warn('Failed to fetch ?src=:', err));
+  }
 
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
